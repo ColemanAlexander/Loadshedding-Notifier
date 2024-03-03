@@ -8,13 +8,21 @@ import requests
 
 import configparser
 
+config_file_path = "C:\\Users\\colem\\lsconfig\\config.ini"
+
+
+
 config = configparser.ConfigParser()
-config.read('config.ini')
+
+config.read(config_file_path)
 
 
 KEY = config['API']['api_key']
 AREA_ID = config['API']['area_id']
 header = {"token": KEY}
+
+
+print(f"{KEY} {AREA_ID}")
 
 
 #TO DO: Handle timeouts for both requests
