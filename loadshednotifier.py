@@ -8,13 +8,11 @@ import requests
 
 import configparser
 
-config_file_path = "C:\\Users\\colem\\lsconfig\\config.ini"
-
-
+CONFIG_FILE_PATH = "C:\\Users\\colem\\lsconfig\\config.ini"
 
 config = configparser.ConfigParser()
 
-config.read(config_file_path)
+config.read(CONFIG_FILE_PATH)
 
 
 KEY = config['API']['api_key']
@@ -22,40 +20,50 @@ AREA_ID = config['API']['area_id']
 header = {"token": KEY}
 
 
-print(f"{KEY} {AREA_ID}")
 
-
-#TO DO: Handle timeouts for both requests
 def allowance_request():
     """requests allowance balance"""
 
     api_url = "https://developer.sepush.co.za/business/2.0/api_allowance"
-    response = requests.get(api_url, headers=header)
-
-    return response
+    response = requests.get(api_url, headers=header, timeout=10)
+    print(response.status_code)
+    if response.status_code==200:
+        return response
+    else:
+        return "failed"
 
 
 def schedule_request():
     """requests schedule"""
 
     api_url = f"https://developer.sepush.co.za/business/2.0/area?id={AREA_ID}"
-    response = requests.get(api_url, headers=header)
-    return response
-
+    response = requests.get(api_url, headers=header, timeout=10)
+    if response.status_code==200:
+        return response
+    else:
+        return "failed"
 
 def allowance_reached():
     """Check if API limit reached (doesn't count towards limit)"""
-    limit = allowance_request().json()["allowance"]["count"]
+
+    req = allowance_request()
+    if req!="failed":
+        limit = req.json()["allowance"]["count"]
     
-    return limit==50 
+        return limit>50
+    else:
+        return "failed" 
 
 
 def get_schedule():
     """Gets current schedule (add &test=current at end when making changes doesn't add to api calls)"""
-
-    events = schedule_request().json()["events"]
-    return events
-
+ 
+    req = schedule_request()
+    if req!="failed":
+        events = req.json()["events"]
+        return events
+    else:
+        return "failed" 
 
 
 def get_loadshedtime(sched):
@@ -128,12 +136,18 @@ def main():
     """main method"""
 
 
+    allowance = allowance_reached()
+    schedule = get_schedule()
 
-    if(allowance_reached()):
+    if (allowance=="failed" or schedule=="failed"):
+        print("fail")
+        return
+
+    if(allowance):
         send_notification("limit")
 
     else:
-        sched = get_schedule()
+        sched = schedule
 
         while(True):
 
