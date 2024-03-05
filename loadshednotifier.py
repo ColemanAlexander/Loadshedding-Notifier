@@ -26,7 +26,6 @@ def allowance_request():
 
     api_url = "https://developer.sepush.co.za/business/2.0/api_allowance"
     response = requests.get(api_url, headers=header, timeout=10)
-    print(response.status_code)
     if response.status_code==200:
         return response
     else:
@@ -140,7 +139,6 @@ def main():
     schedule = get_schedule()
 
     if (allowance=="failed" or schedule=="failed"):
-        print("fail")
         return
 
     if(allowance):
